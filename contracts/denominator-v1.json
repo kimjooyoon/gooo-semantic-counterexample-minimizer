@@ -1,0 +1,18 @@
+{
+  "schema": "gooo/semantic-counterexample-minimizer/denominator/v1",
+  "id": "semantic-counterexample-minimizer-v1",
+  "version": "v1",
+  "cell_count": 9,
+  "fixed": true,
+  "scenarios": [
+    {"ordinal": 1, "id": "remove-unreachable-declaration", "expected": "CLOSED", "rule": "remove_unreachable_declaration", "unknown_class": "-"},
+    {"ordinal": 2, "id": "shrink-expression", "expected": "CLOSED", "rule": "shrink_expression", "unknown_class": "-"},
+    {"ordinal": 3, "id": "reduce-effect-sequence", "expected": "CLOSED", "rule": "reduce_effect_sequence", "unknown_class": "-"},
+    {"ordinal": 4, "id": "already-minimal", "expected": "CLOSED", "rule": "already_minimal", "unknown_class": "-"},
+    {"ordinal": 5, "id": "deterministic-replay", "expected": "CLOSED", "rule": "deterministic_replay", "unknown_class": "-"},
+    {"ordinal": 6, "id": "missing-oracle", "expected": "UNKNOWN", "rule": "missing_oracle", "unknown_class": "DIRECT_MISSING"},
+    {"ordinal": 7, "id": "nondeterministic-oracle", "expected": "UNKNOWN", "rule": "nondeterministic_oracle", "unknown_class": "AMBIGUOUS"},
+    {"ordinal": 8, "id": "failure-lost-during-reduction", "expected": "REFUTED", "rule": "failure_lost_during_reduction", "unknown_class": "-"},
+    {"ordinal": 9, "id": "origin-provenance-drop", "expected": "REFUTED", "rule": "origin_provenance_drop", "unknown_class": "-"}
+  ]
+}

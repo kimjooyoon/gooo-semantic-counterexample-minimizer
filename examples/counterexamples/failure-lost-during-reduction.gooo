@@ -1,0 +1,9 @@
+counterexample version=v1 scenario=failure-lost-during-reduction
+failure_digest=sha256:8888888888888888888888888888888888888888888888888888888888888888
+origin=reducer:failure-loss
+provenance=fixture:failure-lost-during-reduction:v1
+expression=fail reduction loses witness
+effect=READ_INPUT
+effect=WRITE_CALLER_OUTPUT
+node id=1 kind=declaration role=unreachable value=unsafe-removal
+node id=2 kind=declaration role=failure-anchor value=required

@@ -1,0 +1,43 @@
+name: Post-main semantic evidence
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  post-main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: 1.27.0
+          cache: false
+      - name: Verify merged main commit
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Build CI evaluator
+        run: go build -trimpath -o "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin" ./cmd/gooo-semantic-counterexample-minimizer
+      - name: Re-run fixed denominator after main
+        run: scripts/conformance.sh "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin"
+      - name: Write post-main receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "commit=$GITHUB_SHA"
+            echo "denominator=9"
+            echo "authority.repository_writes=0"
+            echo "authority.commit_authority=0"
+            echo "authority.merge_authority=0"
+            echo "authority.release_mutation=0"
+            echo "authority.local_test_executions=0"
+          } > "$RUNNER_TEMP/post-main-receipt.txt"
+      - name: Upload post-main receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-counterexample-minimizer-post-main-${{ github.sha }}
+          path: ${{ runner.temp }}/post-main-receipt.txt
+          if-no-files-found: error

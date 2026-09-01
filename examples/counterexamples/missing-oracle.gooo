@@ -1,0 +1,7 @@
+counterexample version=v1 scenario=missing-oracle
+failure_digest=sha256:6666666666666666666666666666666666666666666666666666666666666666
+origin=evaluator:missing-oracle
+provenance=fixture:missing-oracle:v1
+expression=fail oracle unavailable
+effect=READ_INPUT
+node id=1 kind=expression role=failure-anchor value=oracle-missing

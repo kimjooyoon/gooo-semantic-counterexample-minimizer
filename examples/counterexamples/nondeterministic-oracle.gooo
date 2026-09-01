@@ -1,0 +1,8 @@
+counterexample version=v1 scenario=nondeterministic-oracle
+failure_digest=sha256:7777777777777777777777777777777777777777777777777777777777777777
+origin=evaluator:nondeterministic-oracle
+provenance=fixture:nondeterministic-oracle:v1
+expression=fail oracle replay
+effect=READ_INPUT
+effect=NOOP_TRACE
+node id=1 kind=expression role=failure-anchor value=oracle-ambiguous

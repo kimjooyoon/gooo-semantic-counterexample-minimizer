@@ -1,0 +1,9 @@
+counterexample version=v1 scenario=shrink-expression
+failure_digest=sha256:2222222222222222222222222222222222222222222222222222222222222222
+origin=parser:expression
+provenance=fixture:shrink-expression:v1
+expression=fail alpha + redundant + expression + tail
+effect=READ_INPUT
+effect=WRITE_CALLER_OUTPUT
+node id=1 kind=expression role=failure-anchor value=call
+node id=2 kind=token role=redundant value=tail

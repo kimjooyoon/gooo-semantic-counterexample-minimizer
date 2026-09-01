@@ -1,0 +1,10 @@
+counterexample version=v1 scenario=deterministic-replay
+failure_digest=sha256:5555555555555555555555555555555555555555555555555555555555555555
+origin=compiler:replay
+provenance=fixture:deterministic-replay:v1
+expression=fail replay tail
+effect=READ_INPUT
+effect=NOOP_TRACE
+effect=WRITE_CALLER_OUTPUT
+node id=1 kind=declaration role=unreachable value=replay-dead
+node id=2 kind=declaration role=failure-anchor value=replay-live

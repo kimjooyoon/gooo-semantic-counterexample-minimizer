@@ -1,0 +1,7 @@
+counterexample version=v1 scenario=already-minimal
+failure_digest=sha256:4444444444444444444444444444444444444444444444444444444444444444
+origin=runtime:minimal
+provenance=fixture:already-minimal:v1
+expression=fail
+effect=READ_INPUT
+node id=1 kind=expression role=failure-anchor value=fail

@@ -1,0 +1,9 @@
+counterexample version=v1 scenario=origin-provenance-drop
+failure_digest=sha256:9999999999999999999999999999999999999999999999999999999999999999
+origin=parser:origin-graph
+provenance=fixture:origin-provenance-drop:v1
+expression=fail preserve origin and provenance
+effect=READ_INPUT
+effect=WRITE_CALLER_OUTPUT
+node id=1 kind=declaration role=unreachable value=drop-origin
+node id=2 kind=declaration role=failure-anchor value=required
