@@ -45,6 +45,8 @@ jobs:
             echo "existing release tag must not be modified: $tag" >&2
             exit 1
           fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$tag" "$GITHUB_SHA" -m "gooo-semantic-counterexample-minimizer $tag"
           git push origin "$tag"
       - name: Create draft release with standard GITHUB_TOKEN
