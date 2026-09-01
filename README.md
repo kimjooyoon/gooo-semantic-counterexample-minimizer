@@ -43,6 +43,14 @@ The output contains exactly four artifacts:
 - `preservation-receipt.json`
 - `human-report.md`
 
+GitHub Actions additionally emits `ci-evidence.json`, a machine receipt for
+the five separate CI stages: compile, build, test, conformance, and
+caller-owned integration. Each stage is measured with `/usr/bin/time -v` and
+records integer `wall_ms` and `peak_rss_kib`. The receipt also records exact
+test totals, the six-field UNKNOWN improvement claim, and the exact
+instrumentation coverage pair (`before=0`, `after=10`). Speed and RSS
+improvement remain UNKNOWN without a matched before/after pair.
+
 The evaluator has zero repository-write, commit, merge, release-mutation, and
 local-test authority. GitHub Actions is the validation authority and uses Go
 1.27. The release workflow uses the standard `GITHUB_TOKEN` to create a draft,
