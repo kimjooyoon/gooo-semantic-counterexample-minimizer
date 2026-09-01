@@ -1,0 +1,40 @@
+name: Semantic counterexample minimization conformance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    env:
+      SUBJECT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SUBJECT_SHA }}
+      - uses: actions/setup-go@v6
+        with:
+          go-version: 1.27.0
+          cache: false
+      - name: Verify Go 1.27
+        run: test "$(go env GOVERSION)" = "go1.27.0"
+      - name: Verify formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=$(gofmt -l $(git ls-files '*.go'))
+          test -z "$files"
+      - name: Verify vet
+        run: go vet ./...
+      - name: Verify tests
+        run: go test ./...
+      - name: Verify build
+        run: go build -trimpath -o "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin" ./cmd/gooo-semantic-counterexample-minimizer
+      - name: Run fixed semantic denominator
+        run: scripts/conformance.sh "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin"

@@ -1,0 +1,9 @@
+counterexample version=v1 scenario=remove-unreachable-declaration
+failure_digest=sha256:1111111111111111111111111111111111111111111111111111111111111111
+origin=parser:declaration-reachability
+provenance=fixture:remove-unreachable-declaration:v1
+expression=fail(dead declaration is unreachable)
+effect=READ_INPUT
+effect=WRITE_CALLER_OUTPUT
+node id=1 kind=declaration role=unreachable value=dead-declaration
+node id=2 kind=declaration role=failure-anchor value=live-declaration

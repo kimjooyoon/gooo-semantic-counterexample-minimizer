@@ -1,0 +1,78 @@
+name: Immutable semantic counterexample release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Annotated release version, for example 0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: 1.27.0
+          cache: false
+      - name: Verify main commit
+        run: test "${GITHUB_REF_NAME}" = "main"
+      - name: Build CI evaluator
+        run: go build -trimpath -o "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin" ./cmd/gooo-semantic-counterexample-minimizer
+      - name: Generate release evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-evidence"
+          scripts/release-evidence.sh "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin" "$evidence"
+          tar -czf "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-evidence.tar.gz" -C "$evidence" .
+          sha256sum "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-evidence.tar.gz" > "$RUNNER_TEMP/release-asset.sha256"
+      - name: Create annotated tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v${{ inputs.version }}"
+          if git show-ref --verify --quiet "refs/tags/$tag"; then
+            echo "existing release tag must not be modified: $tag" >&2
+            exit 1
+          fi
+          git tag -a "$tag" "$GITHUB_SHA" -m "gooo-semantic-counterexample-minimizer $tag"
+          git push origin "$tag"
+      - name: Create draft release with standard GITHUB_TOKEN
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v${{ inputs.version }}"
+          gh release create "$tag" --draft --title "$tag" --notes "Semantic counterexample minimizer release $tag. The annotated tag is immutable after publication."
+      - name: Upload evidence asset before publish
+        run: gh release upload "v${{ inputs.version }}" "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-evidence.tar.gz"
+      - name: Publish release exactly once
+        run: gh release edit "v${{ inputs.version }}" --draft=false
+      - name: Verify immutable public API and asset digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v${{ inputs.version }}"
+          release=$(gh api --header 'X-GitHub-Api-Version: 2026-03-10' "repos/$GITHUB_REPOSITORY/releases/tags/$tag")
+          test "$(jq -er '.immutable' <<<"$release")" = true
+          test "$(jq -er '.assets | length' <<<"$release")" -gt 0
+          jq -e 'all(.assets[]; (.digest | type == "string" and startswith("sha256:")))' <<<"$release" >/dev/null
+          expected="sha256:$(awk '{print $1}' "$RUNNER_TEMP/release-asset.sha256")"
+          actual=$(jq -er --arg name "gooo-semantic-counterexample-minimizer-evidence.tar.gz" '.assets[] | select(.name == $name) | .digest' <<<"$release")
+          test "$actual" = "$expected"
+          ref=$(gh api --header 'X-GitHub-Api-Version: 2026-03-10' "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag")
+          test "$(jq -er '.object.type' <<<"$ref")" = tag
+          tag_object=$(jq -er '.object.sha' <<<"$ref")
+          tag_data=$(gh api --header 'X-GitHub-Api-Version: 2026-03-10' "repos/$GITHUB_REPOSITORY/git/tags/$tag_object")
+          test "$(jq -er '.object.type' <<<"$tag_data")" = commit
+          test "$(jq -er '.object.sha' <<<"$tag_data")" = "$GITHUB_SHA"
+          echo "immutable public release verified: $tag"

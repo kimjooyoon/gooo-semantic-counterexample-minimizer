@@ -1,0 +1,35 @@
+gooo semantic_counterexample_minimizer v1
+namespace gooo://semantic-counterexample-minimizer/v1
+
+# This activity declaration owns the semantic reduction vocabulary, the
+# preservation predicate, the resolution precedence, and the fixed denominator.
+# Go is only the parser, evaluator, deterministic reducer, and renderer.
+effect READ_INPUT
+effect WRITE_CALLER_OUTPUT
+effect REPOSITORY_WRITE
+effect COMMIT
+effect MERGE
+effect RELEASE_MUTATION
+
+activity id=BindFailurePredicate role=semantic
+activity id=EnumerateSemanticReductions role=semantic
+activity id=ExecutePreservationOracle role=evaluator
+activity id=SelectDeterministicReduction role=semantic
+activity id=PreserveOriginGraph role=semantic
+activity id=EmitMinimalWitness role=semantic
+
+preservation_predicate failure_digest_and_origin_graph
+precedence REFUTED>UNKNOWN>CLOSED
+unknown_fields stage,step,reason,unknown_class,next_operation,blocked_by
+authority repository_writes=0 commit_authority=0 merge_authority=0 release_mutation=0 local_test_executions=0
+
+denominator id=semantic-counterexample-minimizer-v1 cell_count=9
+case ordinal=1 id=remove-unreachable-declaration expected=CLOSED rule=remove_unreachable_declaration unknown_class=-
+case ordinal=2 id=shrink-expression expected=CLOSED rule=shrink_expression unknown_class=-
+case ordinal=3 id=reduce-effect-sequence expected=CLOSED rule=reduce_effect_sequence unknown_class=-
+case ordinal=4 id=already-minimal expected=CLOSED rule=already_minimal unknown_class=-
+case ordinal=5 id=deterministic-replay expected=CLOSED rule=deterministic_replay unknown_class=-
+case ordinal=6 id=missing-oracle expected=UNKNOWN rule=missing_oracle unknown_class=DIRECT_MISSING
+case ordinal=7 id=nondeterministic-oracle expected=UNKNOWN rule=nondeterministic_oracle unknown_class=AMBIGUOUS
+case ordinal=8 id=failure-lost-during-reduction expected=REFUTED rule=failure_lost_during_reduction unknown_class=-
+case ordinal=9 id=origin-provenance-drop expected=REFUTED rule=origin_provenance_drop unknown_class=-
