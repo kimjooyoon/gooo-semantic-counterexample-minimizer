@@ -9,7 +9,7 @@ output=${5:?machine receipt output path is required}
 
 for stage in compile build test conformance integration; do
   test -f "$stage_root/$stage.json"
-  jq -e --arg stage "$stage" '.stage == $stage and (.wall_ms | type) == "number" and (.wall_ms | floor) == . and (.wall_ms >= 0) and (.peak_rss_kib | type) == "number" and (.peak_rss_kib | floor) == . and (.peak_rss_kib >= 0)' "$stage_root/$stage.json" >/dev/null
+  jq -e --arg stage "$stage" '.stage == $stage and (.wall_ms | type) == "number" and (.wall_ms | floor) == .wall_ms and (.wall_ms >= 0) and (.peak_rss_kib | type) == "number" and (.peak_rss_kib | floor) == .peak_rss_kib and (.peak_rss_kib >= 0)' "$stage_root/$stage.json" >/dev/null
 done
 
 go_test_total=$(jq -s '[.[] | select(.Action == "run" and (.Test // "") != "")] | length' "$test_events")
