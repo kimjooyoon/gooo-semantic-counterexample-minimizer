@@ -31,3 +31,12 @@ cache, vendor, and toolchain internals.
 No aggregate score or estimated percentage is emitted. Improvement is UNKNOWN
 until both members of an exact matched before/after integer pair are supplied
 for the same scenario, source, contract, toolchain, and runner.
+
+CI publishes a separate machine receipt with ten integer stage measurements:
+`compile.wall_ms`, `compile.peak_rss_kib`, `build.wall_ms`,
+`build.peak_rss_kib`, `test.wall_ms`, `test.peak_rss_kib`,
+`conformance.wall_ms`, `conformance.peak_rss_kib`, `integration.wall_ms`, and
+`integration.peak_rss_kib`. The integration stage runs the binary against a
+caller-owned directory, checks all four artifacts and their digests, and
+replays the preservation receipt. The receipt records the Go test totals and
+persists the complete six-field UNKNOWN improvement claim.

@@ -3,8 +3,13 @@ set -euo pipefail
 
 bin=${1:?path to the built minimizer binary is required}
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-work=$(mktemp -d "${RUNNER_TEMP:-/tmp}/gooo-semantic-counterexample-minimizer.XXXXXX")
-trap 'rm -rf "$work"' EXIT
+if [ -n "${CONFORMANCE_WORK_ROOT:-}" ]; then
+  work=$CONFORMANCE_WORK_ROOT
+  mkdir -p "$work"
+else
+  work=$(mktemp -d "${RUNNER_TEMP:-/tmp}/gooo-semantic-counterexample-minimizer.XXXXXX")
+  trap 'rm -rf "$work"' EXIT
+fi
 mkdir -p "$work/first" "$work/replay"
 
 before=$(git -C "$root" status --porcelain=v1 -z --untracked-files=all | sha256sum | awk '{print $1}')
@@ -58,6 +63,18 @@ refuted=$(find "$work/first" -mindepth 2 -name preservation-receipt.json -print0
 test "$closed" = 5
 test "$unknown" = 2
 test "$refuted" = 2
+
+if [ -n "${CONFORMANCE_COUNTS_OUT:-}" ]; then
+  jq -n \
+    --argjson total 9 \
+    --argjson selected 9 \
+    --argjson executed 9 \
+    --argjson reused 0 \
+    --argjson closed "$closed" \
+    --argjson unknown "$unknown" \
+    --argjson refuted "$refuted" \
+    '{schema:"gooo/semantic-counterexample-minimizer/conformance/v1",total:$total,selected:$selected,executed:$executed,reused:$reused,closed:$closed,unknown:$unknown,refuted:$refuted}' > "$CONFORMANCE_COUNTS_OUT"
+fi
 
 forbidden="$root/.gooo-semantic-counterexample-minimizer-forbidden-output"
 set +e

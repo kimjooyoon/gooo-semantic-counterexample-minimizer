@@ -32,9 +32,26 @@ jobs:
           test -z "$files"
       - name: Verify vet
         run: go vet ./...
-      - name: Verify tests
-        run: go test ./...
-      - name: Verify build
-        run: go build -trimpath -o "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin" ./cmd/gooo-semantic-counterexample-minimizer
+      - name: Compile internal package archive
+        run: scripts/measure-stage.sh compile "$RUNNER_TEMP/stage-metrics/compile.json" go build -buildmode=archive -trimpath -o "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-internal.a" ./internal/minimizer
+      - name: Build evaluator binary
+        run: scripts/measure-stage.sh build "$RUNNER_TEMP/stage-metrics/build.json" go build -trimpath -o "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin" ./cmd/gooo-semantic-counterexample-minimizer
+      - name: Run Go tests and record test events
+        shell: bash
+        run: scripts/measure-stage.sh test "$RUNNER_TEMP/stage-metrics/test.json" bash -c 'set -o pipefail; go test -json ./... | tee "$RUNNER_TEMP/go-test-events.jsonl"'
       - name: Run fixed semantic denominator
-        run: scripts/conformance.sh "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin"
+        shell: bash
+        run: CONFORMANCE_WORK_ROOT="$RUNNER_TEMP/conformance-work" CONFORMANCE_COUNTS_OUT="$RUNNER_TEMP/conformance-counts.json" scripts/measure-stage.sh conformance "$RUNNER_TEMP/stage-metrics/conformance.json" scripts/conformance.sh "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin"
+      - name: Run caller-owned integration verification
+        shell: bash
+        run: INTEGRATION_RESULT_OUT="$RUNNER_TEMP/integration-result.json" scripts/measure-stage.sh integration "$RUNNER_TEMP/stage-metrics/integration.json" scripts/integration.sh "$RUNNER_TEMP/gooo-semantic-counterexample-minimizer-bin"
+      - name: Assemble machine receipt
+        env:
+          CONFORMANCE_WORK_ROOT: ${{ runner.temp }}/conformance-work
+        run: scripts/assemble-ci-evidence.sh "$RUNNER_TEMP/stage-metrics" "$RUNNER_TEMP/go-test-events.jsonl" "$RUNNER_TEMP/conformance-counts.json" "$RUNNER_TEMP/integration-result.json" "$RUNNER_TEMP/ci-evidence.json"
+      - name: Upload machine receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-counterexample-minimizer-ci-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/ci-evidence.json
+          if-no-files-found: error
