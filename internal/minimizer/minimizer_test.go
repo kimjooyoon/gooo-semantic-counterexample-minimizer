@@ -35,3 +35,9 @@ func TestMissingAndAmbiguousOracleRemainUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestParseKeyValuesRejectsDuplicateKeys(t *testing.T) {
+	if _, err := parseKeyValues([]string{"id=first", "id=second"}); err == nil {
+		t.Fatal("key/value parser accepted a duplicate key")
+	}
+}
