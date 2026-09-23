@@ -129,6 +129,14 @@ func ParseCounterexample(path string) (Counterexample, []byte, error) {
 	counterexample.Schema = "gooo/semantic-counterexample/v1"
 	scanner := bufio.NewScanner(strings.NewReader(string(data)))
 	lineNumber := 0
+	seenSingleton := make(map[string]bool)
+	markSingleton := func(key string) error {
+		if seenSingleton[key] {
+			return fmt.Errorf("line %d: duplicate %s", lineNumber, key)
+		}
+		seenSingleton[key] = true
+		return nil
+	}
 	for scanner.Scan() {
 		lineNumber++
 		line := strings.TrimSpace(scanner.Text())
@@ -136,6 +144,9 @@ func ParseCounterexample(path string) (Counterexample, []byte, error) {
 			continue
 		}
 		if strings.HasPrefix(line, "counterexample ") {
+			if err := markSingleton("counterexample header"); err != nil {
+				return Counterexample{}, nil, err
+			}
 			values, err := parseKeyValues(strings.Fields(strings.TrimPrefix(line, "counterexample ")))
 			if err != nil {
 				return Counterexample{}, nil, fmt.Errorf("line %d: %w", lineNumber, err)
@@ -146,12 +157,24 @@ func ParseCounterexample(path string) (Counterexample, []byte, error) {
 		}
 		switch {
 		case strings.HasPrefix(line, "failure_digest="):
+			if err := markSingleton("failure_digest"); err != nil {
+				return Counterexample{}, nil, err
+			}
 			counterexample.FailureDigest = strings.TrimPrefix(line, "failure_digest=")
 		case strings.HasPrefix(line, "origin="):
+			if err := markSingleton("origin"); err != nil {
+				return Counterexample{}, nil, err
+			}
 			counterexample.Origin = strings.TrimPrefix(line, "origin=")
 		case strings.HasPrefix(line, "provenance="):
+			if err := markSingleton("provenance"); err != nil {
+				return Counterexample{}, nil, err
+			}
 			counterexample.Provenance = strings.TrimPrefix(line, "provenance=")
 		case strings.HasPrefix(line, "expression="):
+			if err := markSingleton("expression"); err != nil {
+				return Counterexample{}, nil, err
+			}
 			counterexample.Expression = strings.TrimPrefix(line, "expression=")
 		case strings.HasPrefix(line, "effect="):
 			counterexample.Effects = append(counterexample.Effects, strings.TrimPrefix(line, "effect="))

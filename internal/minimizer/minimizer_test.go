@@ -1,6 +1,7 @@
 package minimizer
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -33,5 +34,22 @@ func TestMissingAndAmbiguousOracleRemainUnknown(t *testing.T) {
 		if state != "UNKNOWN" || claim.State != "UNKNOWN" || claim.Stage == "" || claim.Step == "" || claim.Reason == "" || claim.UnknownClass == "" || claim.NextOperation == "" || len(claim.BlockedBy) == 0 {
 			t.Fatalf("incomplete unknown for %s: state=%s claim=%+v", scenario, state, claim)
 		}
+	}
+}
+
+func TestParseCounterexampleRejectsDuplicateSingletonFields(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "duplicate-fields.gooo")
+	content := "counterexample version=v1 scenario=missing-oracle\n" +
+		"failure_digest=first\n" +
+		"failure_digest=second\n" +
+		"origin=origin\n" +
+		"provenance=provenance\n" +
+		"expression=fail\n" +
+		"node id=1 kind=expression role=failure-anchor value=x\n"
+	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := ParseCounterexample(path); err == nil {
+		t.Fatal("duplicate singleton field was silently accepted")
 	}
 }
